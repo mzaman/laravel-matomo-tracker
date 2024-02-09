@@ -45,11 +45,11 @@ class LaravelMatomoTracker extends MatomoTracker
         $this->apiUrl = $apiUrl ?: config('matomotracker.url');
         $this->idSite = $idSite ?: config('matomotracker.idSite');
 
-        $this->ecommerceItems = array();
+        $this->ecommerceItems = [];
         $this->attributionInfo = false;
-        $this->eventCustomVar = false;
+        $this->eventCustomVar = []; // default: false
         // force-set time, so queued commands use the right request time
-        $this->forcedDatetime = time();
+        $this->forcedDatetime = time(); // default: false
         $this->forcedNewVisit = false;
         $this->networkTime = false;
         $this->serverTime = false;
@@ -57,10 +57,10 @@ class LaravelMatomoTracker extends MatomoTracker
         $this->domProcessingTime = false;
         $this->domCompletionTime = false;
         $this->onLoadTime = false;
-        $this->pageCustomVar = false;
-        $this->ecommerceView = array();
-        $this->customParameters = array();
-        $this->customDimensions = array();
+        $this->pageCustomVar = []; // default: false
+        $this->ecommerceView = [];
+        $this->customParameters = [];
+        $this->customDimensions = [];
         $this->customData = false;
         $this->hasCookies = false;
         $this->token_auth = false;
@@ -85,6 +85,15 @@ class LaravelMatomoTracker extends MatomoTracker
         $this->ip = !empty($request->server('REMOTE_ADDR')) ? $request->server('REMOTE_ADDR') : false;
         $this->acceptLanguage = !empty($request->server('HTTP_ACCEPT_LANGUAGE')) ? $request->server('HTTP_ACCEPT_LANGUAGE') : false;
         $this->userAgent = !empty($request->server('HTTP_USER_AGENT')) ? $request->server('HTTP_USER_AGENT') : false;
+        $this->clientHints = [];
+        $this->setClientHints(
+            !empty($_SERVER['HTTP_SEC_CH_UA_MODEL']) ? $_SERVER['HTTP_SEC_CH_UA_MODEL'] : '',
+            !empty($_SERVER['HTTP_SEC_CH_UA_PLATFORM']) ? $_SERVER['HTTP_SEC_CH_UA_PLATFORM'] : '',
+            !empty($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION']) ? $_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'] : '',
+            !empty($_SERVER['HTTP_SEC_CH_UA_FULL_VERSION_LIST']) ? $_SERVER['HTTP_SEC_CH_UA_FULL_VERSION_LIST'] : '',
+            !empty($_SERVER['HTTP_SEC_CH_UA_FULL_VERSION']) ? $_SERVER['HTTP_SEC_CH_UA_FULL_VERSION'] : ''
+        );
+        
         if (!empty($apiUrl)) {
             self::$URL = $this->apiUrl;
         }
@@ -120,15 +129,16 @@ class LaravelMatomoTracker extends MatomoTracker
 
         // Allow debug while blocking the request
         $this->requestTimeout = 600;
+        $this->requestConnectTimeout = 300;
         $this->doBulkRequests = false;
-        $this->storedTrackingActions = array();
+        $this->storedTrackingActions = [];
 
         $this->sendImageResponse = true;
 
         $this->visitorCustomVar = $this->getCustomVariablesFromCookie();
 
-        $this->outgoingTrackerCookies = array();
-        $this->incomingTrackerCookies = array();
+        $this->outgoingTrackerCookies = [];
+        $this->incomingTrackerCookies = [];
     }
 
     /**
