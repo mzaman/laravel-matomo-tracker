@@ -20,125 +20,31 @@ class LaravelMatomoTracker extends MatomoTracker
     /** @var string */
     protected $queueConnection;
 
-    public function __construct(?Request $request, ?int $idSite = null, ?string $apiUrl = null, ?string $tokenAuth = null)
+    /**
+     * MatomoTracker constructor.
+     *
+     * @param int|null $idSite
+     * @param string|null $apiUrl
+     */
+    public function __construct($idSite = null, $apiUrl = null)
     {
-        $this->tokenAuth = $tokenAuth ?: config('matomotracker.tokenAuth');
+        $idSite = $idSite ?? config('matomotracker.idSite');
+        $apiUrl = $apiUrl ?? config('matomotracker.url');
         $this->queue = config('matomotracker.queue', 'matomotracker');
         $this->queueConnection = config('matomotracker.queueConnection', 'default');
 
-        $this->setTokenAuth(!is_null($tokenAuth) ? $tokenAuth : config('matomotracker.tokenAuth'));
-        $this->setMatomoVariables($request, $idSite, $apiUrl);
-    }
+        parent::__construct($idSite, $apiUrl);
 
-    /**
-     * Overrides the PiwikTracker method and uses the \Illuminate\Http\Request for filling in the server vars.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $idSite
-     * @param string $apiUrl
-     *
-     * @return void
-     */
-    private function setMatomoVariables(Request $request, int $idSite = null, string $apiUrl = null)
-    {
-
-        $this->apiUrl = $apiUrl ?: config('matomotracker.url');
-        $this->idSite = $idSite ?: config('matomotracker.idSite');
-
-        $this->ecommerceItems = [];
-        $this->attributionInfo = false;
-        $this->eventCustomVar = []; // default: false
+        $this->setTokenAuth(config('matomotracker.tokenAuth'));
+        $this->eventCustomVar = false; // default: []
+        $this->forcedDatetime = time(); // default: false. 
         // force-set time, so queued commands use the right request time
-        $this->forcedDatetime = time(); // default: false
-        $this->forcedNewVisit = false;
-        $this->networkTime = false;
-        $this->serverTime = false;
-        $this->transferTime = false;
-        $this->domProcessingTime = false;
-        $this->domCompletionTime = false;
-        $this->onLoadTime = false;
-        $this->pageCustomVar = []; // default: false
-        $this->ecommerceView = [];
-        $this->customParameters = [];
-        $this->customDimensions = [];
-        $this->customData = false;
-        $this->hasCookies = false;
-        $this->token_auth = false;
-        $this->userAgent = false;
-        $this->country = false;
-        $this->region = false;
-        $this->city = false;
-        $this->lat = false;
-        $this->long = false;
-        $this->width = false;
-        $this->height = false;
-        $this->plugins = false;
-        $this->localHour = false;
-        $this->localMinute = false;
-        $this->localSecond = false;
-        $this->idPageview = false;
+        $this->pageCustomVar = false; // default: []
 
-        // $this->idSite = $this->idSite;
-        $this->urlReferrer = !empty($request->server('HTTP_REFERER')) ? $request->server('HTTP_REFERER') : false;
-        $this->pageCharset = self::DEFAULT_CHARSET_PARAMETER_VALUES;
-        $this->pageUrl = self::getCurrentUrl();
-        $this->ip = !empty($request->server('REMOTE_ADDR')) ? $request->server('REMOTE_ADDR') : false;
-        $this->acceptLanguage = !empty($request->server('HTTP_ACCEPT_LANGUAGE')) ? $request->server('HTTP_ACCEPT_LANGUAGE') : false;
-        $this->userAgent = !empty($request->server('HTTP_USER_AGENT')) ? $request->server('HTTP_USER_AGENT') : false;
-        $this->clientHints = [];
-        $this->setClientHints(
-            !empty($_SERVER['HTTP_SEC_CH_UA_MODEL']) ? $_SERVER['HTTP_SEC_CH_UA_MODEL'] : '',
-            !empty($_SERVER['HTTP_SEC_CH_UA_PLATFORM']) ? $_SERVER['HTTP_SEC_CH_UA_PLATFORM'] : '',
-            !empty($_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION']) ? $_SERVER['HTTP_SEC_CH_UA_PLATFORM_VERSION'] : '',
-            !empty($_SERVER['HTTP_SEC_CH_UA_FULL_VERSION_LIST']) ? $_SERVER['HTTP_SEC_CH_UA_FULL_VERSION_LIST'] : '',
-            !empty($_SERVER['HTTP_SEC_CH_UA_FULL_VERSION']) ? $_SERVER['HTTP_SEC_CH_UA_FULL_VERSION'] : ''
-        );
-        
-        if (!empty($apiUrl)) {
-            self::$URL = $this->apiUrl;
-        }
-
-        // Life of the visitor cookie (in sec)
-        $this->configVisitorCookieTimeout = 33955200; // 13 months (365 + 28 days)
-        // Life of the session cookie (in sec)
-        $this->configSessionCookieTimeout = 1800; // 30 minutes
-        // Life of the session cookie (in sec)
-        $this->configReferralCookieTimeout = 15768000; // 6 months
-
-        // Visitor Ids in order
-        $this->userId = false;
-        $this->forcedVisitorId = false;
-        $this->cookieVisitorId = false;
-        $this->randomVisitorId = false;
-
-        $this->setNewVisitorId();
-
-        $this->configCookiesDisabled = false;
-        $this->configCookiePath = self::DEFAULT_COOKIE_PATH;
-        $this->configCookieDomain = '';
-        $this->configCookieSameSite = '';
-        $this->configCookieSecure = false;
-        $this->configCookieHTTPOnly = false;
-
-        $this->currentTs = time();
-        $this->createTs = $this->currentTs;
         $this->visitCount = 0;
         $this->currentVisitTs = false;
         $this->lastVisitTs = false;
         $this->ecommerceLastOrderTimestamp = false;
-
-        // Allow debug while blocking the request
-        $this->requestTimeout = 600;
-        $this->requestConnectTimeout = 300;
-        $this->doBulkRequests = false;
-        $this->storedTrackingActions = [];
-
-        $this->sendImageResponse = true;
-
-        $this->visitorCustomVar = $this->getCustomVariablesFromCookie();
-
-        $this->outgoingTrackerCookies = [];
-        $this->incomingTrackerCookies = [];
     }
 
     /**
@@ -329,6 +235,7 @@ class LaravelMatomoTracker extends MatomoTracker
      *
      * @return void
      */
+
     public function queueEvent(string $category, string $action, $name = false, $value = false)
     {
         dispatch(function () use ($category, $action, $name, $value) {
