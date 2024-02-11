@@ -238,11 +238,17 @@ class LaravelMatomoTracker extends MatomoTracker
 
     public function queueEvent(string $category, string $action, $name = false, $value = false)
     {
-        dispatch(function () use ($category, $action, $name, $value) {
-            $this->doTrackEvent($category, $action, $name, $value);
-        })
-            ->onConnection($this->queueConnection)
-            ->onQueue($this->queue);
+        try {
+            dispatch(function () use ($category, $action, $name, $value) {
+                $this->doTrackEvent($category, $action, $name, $value);
+            })
+                ->onConnection($this->queueConnection)
+                ->onQueue($this->queue);
+        } catch (\Exception $e) {
+            dd($e);
+            // Handle the exception (e.g., log the error)
+        }
+
     }
 
     /** Queues a content impression
