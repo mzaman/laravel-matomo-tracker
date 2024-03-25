@@ -45,6 +45,8 @@ class LaravelMatomoTracker extends MatomoTracker
         $this->currentVisitTs = false;
         $this->lastVisitTs = false;
         $this->ecommerceLastOrderTimestamp = false;
+
+        
     }
 
     /**
@@ -235,21 +237,51 @@ class LaravelMatomoTracker extends MatomoTracker
      *
      * @return void
      */
-
-    public function queueEvent(string $category, string $action, $name = false, $value = false)
+    public function queueEvent(string $category, string $action, $name = null, $value = null)
     {
         try {
-            dispatch(function () use ($category, $action, $name, $value) {
-                $this->doTrackEvent($category, $action, $name, $value);
-            })
+            // Log parameters before dispatching
+            \Log::info("Category:- $category, Action:- $action, Name:- $name, Value: $value");
+
+            // Ensure $name and $value are not false before dispatching
+            if ($name !== false) {
+                \Log::info("Name:- $name");
+                dispatch(function () use ($category, $action, $name, $value) {
+                    // Log before tracking event
+                    \Log::info("Tracking event: Category: $category, Action: $action, Name: $name, Value: $value");
+    
+                    // Track event
+                    $this->doTrackEvent($category, $action, $name, $value);
+                })
                 ->onConnection($this->queueConnection)
                 ->onQueue($this->queue);
+            } else {
+                // Handle the case where $name or $value is false
+                // Log or handle accordingly
+                \Log::warning("Invalid name or value: Name: $name, Value: $value");
+            }
         } catch (\Exception $e) {
-            dd($e);
             // Handle the exception (e.g., log the error)
+            \Log::error("Error in queueEvent method: " . $e->getMessage());
         }
-
     }
+
+    // public function queueEvent(string $category, string $action, $name = false, $value = false)
+    // {
+    //     // return true;
+    //     // print_r($category, $action, $name, $value);
+    //     try {
+    //         dispatch(function () use ($category, $action, $name, $value) {
+    //             $this->doTrackEvent($category, $action, $name, $value);
+    //         })
+    //             ->onConnection($this->queueConnection)
+    //             ->onQueue($this->queue);
+    //     } catch (\Exception $e) {
+    //         dd($e);
+    //         // Handle the exception (e.g., log the error)
+    //     }
+
+    // }
 
     /** Queues a content impression
      *
@@ -416,7 +448,9 @@ class LaravelMatomoTracker extends MatomoTracker
             ->onConnection($this->queueConnection)
             ->onQueue($this->queue);
     }
-
+    public function __sleep() {
+        return []; //Pass the names of the variables that should be serialised here
+    }
     /**
      * Called after unserializing (e.g. after popping from the queue). Re-set
      * self::$URL, as only non-static properties have been applied.
