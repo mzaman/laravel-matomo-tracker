@@ -34,6 +34,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Async
+    |--------------------------------------------------------------------------
+    |
+    | This function will use the laravel queue.
+    | Make sure your setup is correct.
+    |
+    */
+    'async' => false,
+    
+    /*
+    |--------------------------------------------------------------------------
     | Queue
     |--------------------------------------------------------------------------
     |
@@ -41,7 +52,7 @@ return [
     | Use 'default' if you want to run the queued items within the standard queue.
     |
     */
-    'queue' => env('MATOMO_QUEUE', 'matomotracker'),
+    'queue' => env('MATOMO_QUEUE', 'default'),
 
     /*
     |--------------------------------------------------------------------------
@@ -51,16 +62,5 @@ return [
     | Optionally set a custom queue connection. Laravel defaults to "sync".
     |
     */
-    'queueConnection' => env('MATOMO_QUEUE_CONNECTION', 'default'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Async
-    |--------------------------------------------------------------------------
-    |
-    | This function will use the laravel queue.
-    | Make sure your setup is correct.
-    |
-    */
-    'async' => false,
+    'queueConnection' => env('MATOMO_QUEUE_CONNECTION', 'database'),
 ];

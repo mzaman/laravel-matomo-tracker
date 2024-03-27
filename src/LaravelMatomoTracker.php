@@ -5,10 +5,12 @@ namespace MasudZaman\MatomoTracker;
 use Exception;
 use \Illuminate\Http\Request;
 use \MatomoTracker;
+use MasudZaman\MatomoTracker\Jobs\QueueEvent;
 
 class LaravelMatomoTracker extends MatomoTracker
 {
-
+    /** @var bool */
+    protected $async;
     /** @var string */
     protected $apiUrl;
     /** @var int */
@@ -30,10 +32,11 @@ class LaravelMatomoTracker extends MatomoTracker
     {
         $idSite = $idSite ?? config('matomotracker.idSite');
         $apiUrl = $apiUrl ?? config('matomotracker.url');
-        $this->queue = config('matomotracker.queue', 'matomotracker');
-        $this->queueConnection = config('matomotracker.queueConnection', 'default');
+        $this->async = config('matomotracker.async', false);
+        $this->queue = config('matomotracker.queue', 'default');
+        $this->queueConnection = config('matomotracker.queueConnection', 'database');
 
-        parent::__construct($idSite, $apiUrl);
+        parent::__construct((int)$idSite, $apiUrl);
 
         $this->setTokenAuth(config('matomotracker.tokenAuth'));
         $this->eventCustomVar = false; // default: []
@@ -46,7 +49,6 @@ class LaravelMatomoTracker extends MatomoTracker
         $this->lastVisitTs = false;
         $this->ecommerceLastOrderTimestamp = false;
 
-        
     }
 
     /**
@@ -228,60 +230,34 @@ class LaravelMatomoTracker extends MatomoTracker
             ->onQueue($this->queue);
     }
 
-    /** Queues an event
+    /**
+     * Queues or tracks an event based on the asynchronous flag.
      *
      * @param string $category
      * @param string $action
      * @param string|bool $name
-     * @param string|bool $value
-     *
+     * @param int $value
      * @return void
      */
-    public function queueEvent(string $category, string $action, $name = null, $value = null)
+    public function trackEvent(string $category, string $action, $name = false, $value = 0)
     {
         try {
-            // Log parameters before dispatching
-            \Log::info("Category:- $category, Action:- $action, Name:- $name, Value: $value");
-
-            // Ensure $name and $value are not false before dispatching
-            if ($name !== false) {
-                \Log::info("Name:- $name");
-                dispatch(function () use ($category, $action, $name, $value) {
-                    // Log before tracking event
-                    \Log::info("Tracking event: Category: $category, Action: $action, Name: $name, Value: $value");
-    
-                    // Track event
-                    $this->doTrackEvent($category, $action, $name, $value);
-                })
-                ->onConnection($this->queueConnection)
-                ->onQueue($this->queue);
+            if ($this->async) {
+                // Queue the event to be tracked asynchronously
+                $job = new QueueEvent($category, $action, $name, $value);
+                dispatch($job)
+                    ->onConnection($this->queueConnection)
+                    ->onQueue($this->queue);
             } else {
-                // Handle the case where $name or $value is false
-                // Log or handle accordingly
-                \Log::warning("Invalid name or value: Name: $name, Value: $value");
+                // Track the event synchronously
+                $this->doTrackEvent($category, $action, $name, $value);
             }
         } catch (\Exception $e) {
             // Handle the exception (e.g., log the error)
-            \Log::error("Error in queueEvent method: " . $e->getMessage());
+            \Log::error("Error processing event: " . $e->getMessage());
+            throw $e;
         }
     }
-
-    // public function queueEvent(string $category, string $action, $name = false, $value = false)
-    // {
-    //     // return true;
-    //     // print_r($category, $action, $name, $value);
-    //     try {
-    //         dispatch(function () use ($category, $action, $name, $value) {
-    //             $this->doTrackEvent($category, $action, $name, $value);
-    //         })
-    //             ->onConnection($this->queueConnection)
-    //             ->onQueue($this->queue);
-    //     } catch (\Exception $e) {
-    //         dd($e);
-    //         // Handle the exception (e.g., log the error)
-    //     }
-
-    // }
 
     /** Queues a content impression
      *
