@@ -254,7 +254,7 @@ class LaravelMatomoTracker extends MatomoTracker
             }
         } catch (\Exception $e) {
             // Handle the exception (e.g., log the error)
-            \Log::error("Error processing event: " . $e->getMessage());
+            \Log::info("Error processing event: " . $e->getMessage());
             throw $e;
         }
     }
