@@ -40,7 +40,7 @@ return [
     | This format specifies the case for event category names.
     |
     */
-    'event_category_format' => '%CC%',
+    'event_category_format' => '{CC}',
 
     /*
     |--------------------------------------------------------------------------
@@ -50,7 +50,7 @@ return [
     | This format specifies the case for event action names.
     |
     */
-    'event_action_format' => '%Cc%-%a%',
+    'event_action_format' => '{Cc}-{a}',
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +60,8 @@ return [
     | This format specifies the case for event names.
     |
     */
-    'event_name_format' => '%Cc%-%Aa%-%n%',
+    'event_name_format' => '{Nn}',
+    // 'event_name_format' => '{CC}-{Aa}-{n},
 
     /*
     |--------------------------------------------------------------------------
