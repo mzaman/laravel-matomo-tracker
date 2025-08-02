@@ -10,7 +10,7 @@ The `mzaman\laravel-matomo-tracker` Laravel package is a wrapper for the `piwik\
 
 ## Compatibility
 
-This package is compatible with Laravel 9.x and later. Ensure that your Laravel version meets the required version before proceeding with the installation.
+This package is compatible with Laravel 9.x, 10.x and later. Ensure that your Laravel version meets the required version before proceeding with the installation.
 
 ## Installation
 
