@@ -1,8 +1,8 @@
 {
     "name": "mzaman/laravel-matomo-tracker",
-    "version": "2.0.1",
     "description": "A Laravel facade/wrapper for the matomo/matomo-php-tracker for server-side Matomo tracking.",
     "license": "BSD-3-Clause",
+    "version": "2.1.0", 
     "authors": [
         {
             "name": "Masud Zaman",
@@ -14,7 +14,7 @@
     "keywords": ["Laravel", "Matomo Tracker", "Piwik", "Piwik Laravel Tracker", "Server side tracking"],
     "require": {
         "php": "^8.0|^8.1",
-        "matomo/matomo-php-tracker": "^3.2|^3.3"
+        "matomo/matomo-php-tracker": "^3.2|^3.3|dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5|^10.5",
